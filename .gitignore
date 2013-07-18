@@ -2,7 +2,10 @@
 app/code/community/Find/
 app/code/community/Phoenix/
 app/code/core/
+<<<<<<< HEAD
 app/design/adminhtml/default/find/
+=======
+>>>>>>> 98e1a9042c2536a9b9cf71985ae17c2b398feeb1
 app/design/frontend/default/blank/
 app/design/frontend/default/default/
 app/design/frontend/default/iphone/
