@@ -11,10 +11,11 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
     protected $_code = 'paybras';
     protected $_formBlockType = 'paybras/form_cc';
     protected $_infoBlockType = 'paybras/info';
-    protected $_isInitializeNeeded = true;
+    protected $_isInitializeNeeded = false;
     
-    protected $_canUseInternal = true;
-    protected $_canUseForMultishipping = true;
+    
+    protected $_canUseInternal = false;
+    protected $_canUseForMultishipping = false;
     protected $_canUseCheckout = true;
     protected $_order;
     protected $_ambiente = 1;
@@ -210,7 +211,15 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         $fields['pagador_celular_ddd'] = substr($celular,0,2);
         $fields['pagador_celular'] = substr($celular,2);
         
-        $fields['pagador_sexo'] = $order->getCustomerGender();
+        $fields['pagador_sexo'] = $order->getCustomerGender() ? $order->getCustomerGender() : $order->getCustomer()->getGender();
+        
+        switch((int)$fields['pagador_sexo']) {
+            case 1: $fields['pagador_sexo'] = 'M'; break;
+            case 2: $fields['pagador_sexo'] = 'F'; break;
+            default: $fields['pagador_sexo'] = ''; break;
+        }
+        
+        $this->log('Sexo: '.$fields['pagador_sexo']);
         
         $additionaldata = unserialize($payment->getData('additional_data'));
         $this->formaPagamento = $additionaldata['forma_pagamento'];
@@ -495,7 +504,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         Mage::log('O repay eh '.$repay);
 		if($repay != NULL) {
 			switch($num) {
-				case 1: return Mage_Sales_Model_Order::STATE_PENDING_PAYMENT;
+				case 1: return Mage_Sales_Model_Order::STATE_NEW;//STATE_PENDING_PAYMENT;
 				case 2: return Mage_Sales_Model_Order::STATE_HOLDED;//Mage_Sales_Model_Order::STATE_HOLDED;
 				case 3: return Mage_Sales_Model_Order::STATE_CANCELED;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
@@ -505,12 +514,12 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 		}
 		else {
 			switch($num) {
-				case 1: return Mage_Sales_Model_Order::STATE_PENDING_PAYMENT;
+				case 1: return Mage_Sales_Model_Order::STATE_NEW;
 				case 2: return Mage_Sales_Model_Order::STATE_HOLDED;//Mage_Sales_Model_Order::STATE_HOLDED;
-				case 3: return Mage_Sales_Model_Order::STATE_PENDING_PAYMENT;
+				case 3: return Mage_Sales_Model_Order::STATE_NEW;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
-				case 5: return Mage_Sales_Model_Order::STATE_PENDING_PAYMENT;//Mage_Sales_Model_Order::STATE_CANCELED;
-				default: return Mage_Sales_Model_Order::STATE_PENDING_PAYMENT;
+				case 5: return Mage_Sales_Model_Order::STATE_NEW;//Mage_Sales_Model_Order::STATE_CANCELED;
+				default: return Mage_Sales_Model_Order::STATE_NEW;
 			}
 		}
     }
@@ -525,7 +534,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         $num = (int)$num;
 		if($repay != NULL) {
 			switch($num) {
-				case 1: return 'pending_payment';
+				case 1: return 'pending';//'pending_payment';
 				case 2: return 'holded';
 				case 3: return 'canceled';//'canceled';
 				case 4: return 'processing';
@@ -535,12 +544,12 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 		}
 		else {
 			switch($num) {
-				case 1: return 'pending_payment';
+				case 1: return 'pending';
 				case 2: return 'holded';
-				case 3: return 'pending_payment';
+				case 3: return 'pending';
 				case 4: return 'processing';
-				case 5: return 'pending_payment';
-				default: return 'pending_payment';
+				case 5: return 'pending';
+				default: return 'pending';
 			}
 		}
     }
