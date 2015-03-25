@@ -117,7 +117,15 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
         }
         
         $info = $this->getInfoInstance();
-        $additionaldata = array('forma_pagamento' => 'boleto');
+        
+        $cpfForce = Mage::getStoreConfig('payment/paybras/forcecpf') == '' || Mage::getStoreConfig('payment/paybras/forcecpf') == 0 || Mage::getStoreConfig('payment/paybras/forcecpf') == '0' ? 0 : 1;
+        if($cpfForce) {
+            $additionaldata = array('forma_pagamento' => 'boleto', 'cpf_titular' => $data->getCcCpftitular());
+        }
+        else {
+            $additionaldata = array('forma_pagamento' => 'boleto');
+        }
+        
         $info->setAdditionalData(serialize($additionaldata));
         return $this;
     }
@@ -322,6 +330,10 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
         
         $additionaldata = unserialize($payment->getData('additional_data'));
         $this->formaPagamento = $additionaldata['forma_pagamento'];
+        
+        if(!$fields['pagador_cpf'] && isset($additionaldata['cpf_titular'])) {
+            $fields['pagador_cpf'] = $additionaldata['cpf_titular'];
+        }
         
         $fields['pedido_meio_pagamento'] = 'boleto';
         $fields['pedido_id'] = $order->getIncrementId();

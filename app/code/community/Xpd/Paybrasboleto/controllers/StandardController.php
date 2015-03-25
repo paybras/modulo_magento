@@ -9,7 +9,7 @@
 class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sessão Expirada
+     * Header de Sessï¿½o Expirada
      *
      */
     protected function _expireAjax() {
@@ -20,7 +20,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
     }
 
     /**
-     * Retorna singleton do Model do Módulo.
+     * Retorna singleton do Model do Mï¿½dulo.
      *
      * @return Xpd_Paybras_Model_Standard
      */
@@ -29,7 +29,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
     }
     
     /**
-     * Processa pagamento - cria transação via WebService 
+     * Processa pagamento - cria transaï¿½ï¿½o via WebService 
      * 
      */
     protected function redirectAction() {
@@ -106,7 +106,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
             $paybras->processStatus($order,$status_codigo,$transactionId);
             
             $session->setFormaPag($fields['pedido_meio_pagamento']);
-			$session->setStatePag($paybras->convertStatus($status_codigo));
+            $session->setStatePag($paybras->convertStatus($status_codigo));
             
             $url_redirect = utf8_decode($json_php->{'url_pagamento'});
             if($url_redirect) {
@@ -120,22 +120,22 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
             $url = Mage::getUrl('checkout/onepage/failure');
         }
         
-		if ($orderId) {
+        if ($orderId) {
             if(!$order->getEmailSent()) {
-            	$order->sendNewOrderEmail();
-    			$order->setEmailSent(true);
-    			$order->save();
+                $order->sendNewOrderEmail();
+                $order->setEmailSent(true);
+                $order->save();
                 $paybras->log("Email do Pedido $orderId Enviado");
             }
         }
-		
+        
         $session->setOrderId($orderId);
         $this->getResponse()->setRedirect($url);
         //$session->unsUrlRedirect();
     }
     
     /**
-     * Captura Notificação do Pagamento
+     * Captura Notificaï¿½ï¿½o do Pagamento
      * 
      */
     public function capturaAction() {
@@ -146,17 +146,31 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
             
             if(!$json) {
                 $json = $_POST;
-                $transactionId = $json['transacao_id'];
-                $pedidoId = $json['pedido_id'];
-                $pedidoIdVerifica = $pedidoId;
-                $valor = $json['valor_original'];
-                $status_codigo = $json['status_codigo'];
-                $status_nome = $json['status_nome'];
-                $recebedor_api = $json['recebedor_api_token'];
+                if(is_array($json)) {
+                    if(isset($json['transacao_id']))
+                        $transactionId = $json['transacao_id'];
+                    if(isset($json['transacao_recuperada_id']))
+                        $transactionId = $json->{'transacao_recuperada_id'};
+                    if(isset($json['pedido_id']))
+                        $pedidoId = $json['pedido_id'];
+                    if(isset($pedidoId))
+                        $pedidoIdVerifica = $pedidoId;
+                    if(isset($json['valor_original']))
+                        $valor = $json['valor_original'];
+                    if(isset($json['status_codigo']))
+                        $status_codigo = $json['status_codigo'];
+                    if(isset($json['status_nome']))
+                        $status_nome = $json['status_nome'];
+                    if(isset($json['recebedor_api_token']))
+                        $recebedor_api = $json['recebedor_api_token'];
+                }
             }
             else {
-                $json = json_decode($json);
+                $json = json_decode(trim($json));
                 $transactionId = $json->{'transacao_id'};
+                if(isset($json->{'transacao_recuperada_id'})) {
+                    $transactionId = $json->{'transacao_recuperada_id'};
+                }
                 $pedidoId = $json->{'pedido_id'};
                 $pedidoIdVerifica = $pedidoId;
                 $valor = $json->{'valor_original'};
@@ -164,12 +178,11 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                 $status_nome = $json->{'status_nome'};
                 $recebedor_api = $json->{'recebedor_api_token'};
             }
-            $paybras = $this->getStandard();
             
             $paybras->log('Pedido ID: '.$pedidoId);
             $paybras->log('Status: '.$status_codigo);
             $paybras->log('Transaction ID: '.$transactionId);
-			
+            
             if($transactionId && $status_codigo && $pedidoId) {
                 if(strpos($pedidoId,'_') !== false) {
                     $pedido = explode("_",$pedidoId);
@@ -183,15 +196,15 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                   ->getCollection()
                   ->addAttributeToFilter('increment_id', $orderId)
                   ->getFirstItem();
-				  
-				if(!$order) {
-					$order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
-				}
+                  
+                if(!$order) {
+                    $order = Mage::getModel('sales/order')->loadByIncrementId($orderId);
+                }
                 
                 $status = (int)$status_codigo;
-				
-				$paybras->log($order->getId());
-				
+                
+                $paybras->log($order->getId());
+                
                 if($paybras->getEnvironment() == '1') {
                     $url = 'https://service.paybras.com/payment/getStatus';
                 }
@@ -205,7 +218,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                     'transacao_id' => $transactionId,
                     'pedido_id' => $pedidoId
                 );
-				
+                
                 $curlAdapter = new Varien_Http_Adapter_Curl();
                 $curlAdapter->setConfig(array('timeout' => 20));
                 $curlAdapter->write(Zend_Http_Client::POST, $url, '1.1', array('Content-Type: application/json','Content-Length: ' . strlen(json_encode($fields))), json_encode($fields));
@@ -219,12 +232,12 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                         $result = $paybras->processStatus($order,$status,$transactionId);
                         //if($result >= 0) {
                             echo '{"retorno":"ok"}';
-							$paybras->log('{"retorno":"ok"}');
+                            $paybras->log('{"retorno":"ok"}');
                         //}
                     }
-					else {
-						$paybras->log('Informações do pedido não bateram');
-					}
+                    else {
+                        $paybras->log('Informaï¿½ï¿½es do pedido nï¿½o bateram');
+                    }
                 }
                 else {
                     $paybras->log('Erro resposta de Consulta');
@@ -235,8 +248,8 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                 $paybras->log($json);
                 echo 'Erro na Captura - Nao foi possivel pergar os dados';
             }
-			
-			$paybras->log('Fim da Captura');
+            
+            $paybras->log('Fim da Captura');
         }
     }
 }

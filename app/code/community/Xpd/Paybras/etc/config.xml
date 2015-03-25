@@ -77,16 +77,31 @@
                         <name>ELO</name>
                         <order>50</order>
                     </elo>
+                    <!-- <aura>
+                        <code>aura</code>
+                        <name>Aura</name>
+                        <order>60</order>
+                    </aura> -->
+                    <jcb>
+                        <code>jcb</code>
+                        <name>JCB</name>
+                        <order>70</order>
+                    </jcb>
+                    <hipercard>
+                        <code>hipercard</code>
+                        <name>Hipercard</name>
+                        <order>80</order>
+                    </hipercard>
                     <simulacao>
                         <code>simulacao</code>
                         <name>Simulacao</name>
-                        <order>60</order>
+                        <order>999</order>
                     </simulacao>
-                    <!--hiper>
+                    <!-- <hiper>
                         <code>hiper</code>
                         <name>Hipercard</name>
                         <order>70</order>
-                    </hiper-->
+                    </hiper> -->
                 </types>
             </cc>
         </paybras>

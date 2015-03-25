@@ -112,7 +112,14 @@ class Xpd_Paybrastef_Model_Standard extends Mage_Payment_Model_Method_Abstract {
             $data = new Varien_Object($data);
         }
         $info = $this->getInfoInstance();
-        $additionaldata = array('tef_banco' => $data->getTefBanco(), 'forma_pagamento' => 'tef_bb');
+        
+        $cpfForce = Mage::getStoreConfig('payment/paybrastef/forcecpf') == '' || Mage::getStoreConfig('payment/paybrastef/forcecpf') == 0 || Mage::getStoreConfig('payment/paybrastef/forcecpf') == '0' ? 0 : 1;
+        if($cpfForce) {
+            $additionaldata = array('tef_banco' => $data->getTefBanco(), 'cpf_titular' => $data->getCcCpftitular(), 'forma_pagamento' => 'tef_bb');
+        }
+        else {
+            $additionaldata = array('tef_banco' => $data->getTefBanco(), 'forma_pagamento' => 'tef_bb');
+        }
         $info->setAdditionalData(serialize($additionaldata));
         
         return $this;
@@ -214,6 +221,10 @@ class Xpd_Paybrastef_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         
         $additionaldata = unserialize($payment->getData('additional_data'));
         $this->formaPagamento = $additionaldata['tef_banco'];
+        
+        if(isset($additionaldata['cpf_titular'])) {
+            $fields['pagador_cpf'] = $additionaldata['cpf_titular'];
+        }
         
         $fields['pedido_url_redirecionamento'] = Mage::getBaseUrl() . 'paybras/standard/success/';
 		$fields['pedido_meio_pagamento'] = $additionaldata['tef_banco'];
@@ -375,6 +386,48 @@ class Xpd_Paybrastef_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         }
         
         return -1;
+    }
+    
+    /**
+     * Cria reembolso
+     */
+    public function refundOrder($order, $order_msg) {
+        $service = Mage::getModel('sales/service_order', $order);
+        if (!$order->canCreditmemo()) {
+            $this->log("Pedido não pode ser Estornado/Devolvido.");
+            return -1;
+        }
+    
+        if ($refundToStoreCreditAmount) {
+            $refundToStoreCreditAmount = max(0, min($creditmemo->getBaseCustomerBalanceReturnMax(), $refundToStoreCreditAmount));
+            if ($refundToStoreCreditAmount) {
+                $refundToStoreCreditAmount = $creditmemo->getStore()->roundPrice($refundToStoreCreditAmount);
+                $creditmemo->setBaseCustomerBalanceTotalRefunded($refundToStoreCreditAmount);
+                $refundToStoreCreditAmount = $creditmemo->getStore()->roundPrice(
+                        $refundToStoreCreditAmount * $order->getStoreToOrderRate()
+                );
+    
+                $creditmemo->setBsCustomerBalTotalRefunded($refundToStoreCreditAmount);
+                $creditmemo->setCustomerBalanceRefundFlag(true);
+            }
+        }
+    
+        $creditmemo->setPaymentRefundDisallowed(true)->register();
+        if (!empty($order_msg)) {
+            $creditmemo->addComment($order_msg, $notifyCustomer);
+        }
+    
+        try {
+            Mage::getModel('core/resource_transaction')
+            ->addObject($creditmemo)
+            ->addObject($order)
+            ->save();
+            $this->log("Pagamento Devolvido, pedido: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+            return 0;
+        } catch (Mage_Core_Exception $e) {
+            $this->log("Pedido não pode ser Estornado/Devolvido. Erro: " . $e->getMessage());
+            return -1;
+        }
     }
     
     /**
