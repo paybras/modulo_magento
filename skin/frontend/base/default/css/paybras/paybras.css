@@ -66,14 +66,14 @@
     background: url("../images/paybras/padlock_clean.png") no-repeat scroll 225px white;
 }*/
 
-#payment_form_paybras #cc select, #payment_form_paybras #cc option {
+#payment_form_paybrasweb select, #payment_form_paybrastef select, #payment_form_paybrasboleto select, #payment_form_paybras #cc select, #payment_form_paybras #cc option {
     outline: 0 none;
     clear: both;
     float: left;
     font-size: 14px;
 }
 
-#payment_form_paybras #cc .input-text {
+#payment_form_paybrasweb .input-text, #payment_form_paybrastef .input-text, #payment_form_paybrasboleto .input-text, #payment_form_paybras #cc .input-text {
     width: 240px;
     height: 25px;
     margin-bottom: 10px;
