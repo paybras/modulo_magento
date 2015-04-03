@@ -23,7 +23,9 @@
 
 <?php if($cpfForce):?>
 <script type="text/javascript">
-new MaskedInput('input[name="payment[cc_cpftitular]"]', '999.999.999-99');
+if(typeof mascaraCpf == 'undefined') {
+	mascaraCpf = new MaskedInput('input[name="payment[cc_cpftitular]"]', '999.999.999-99');
+}
 
 Validation.add('cpftitular','CPF Inválido',function(valueCPF) {
     var cpf = valueCPF.replace(/[^\d]+/g,'');

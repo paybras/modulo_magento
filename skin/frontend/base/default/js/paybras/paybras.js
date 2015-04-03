@@ -206,13 +206,20 @@ function verifyType(element) {
     $$('.seleciona-bandeiras-cards label').each(function(e,i){
         $(e).removeClassName('selecionada');
     });
-    $('opt-visa').checked = false;
-    $('opt-mastercard').checked = false;
-    $('opt-amex').checked = false;
-    $('opt-diners').checked = false;
-    $('opt-elo').checked = false;
-    $('opt-jcb').checked = false;
-    $('opt-hipercard').checked = false;
+    if($('opt-visa') != null)
+    	$('opt-visa').checked = false;
+    if($('opt-mastercard') != null)
+    	$('opt-mastercard').checked = false;
+    if($('opt-amex') != null)
+    	$('opt-amex').checked = false;
+    if($('opt-diners') != null)
+    	$('opt-diners').checked = false;
+    if($('opt-elo') != null)
+    	$('opt-elo').checked = false;
+    if($('opt-jcb') != null)
+    	$('opt-jcb').checked = false;
+    if($('opt-hipercard') != null)
+    	$('opt-hipercard').checked = false;
     //$('opt-aura').checked = false;
     
     if(visaReg.test(ccnum) && ccnum.length == 16) {
