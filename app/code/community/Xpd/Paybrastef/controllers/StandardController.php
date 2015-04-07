@@ -9,7 +9,7 @@
 class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sess�o Expirada
+     * Header de Sessão Expirada
      *
      */
     protected function _expireAjax() {
@@ -20,7 +20,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     }
 
     /**
-     * Retorna singleton do Model do M�dulo.
+     * Retorna singleton do Model do Módulo.
      *
      * @return Xpd_Paybrastef_Model_Standard
      */
@@ -29,7 +29,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     }
     
     /**
-     * Processa pagamento - cria transa��o via WebService 
+     * Processa pagamento - cria transação via WebService 
      * 
      */
     protected function redirectAction() {
@@ -135,7 +135,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     
     
     /**
-     * Captura Notifica��o do Pagamento
+     * Captura Notificação do Pagamento
      * 
      */
     public function capturaAction() {
@@ -230,13 +230,11 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
                 if($json->{'sucesso'} == '1') {
                     if($json->{'pedido_id'} == $pedidoIdVerifica && $json->{'valor_original'} == $valor && $json->{'status_codigo'} == $status_codigo) {
                         $result = $paybras->processStatus($order,$status,$transactionId);
-                        //if($result >= 0) {
-                            echo '{"retorno":"ok"}';
-							$paybras->log('{"retorno":"ok"}');
-                        //}
+                        echo '{"retorno":"ok"}';
+						$paybras->log('{"retorno":"ok"}');
                     }
 					else {
-						$paybras->log('Informa��es do pedido n�o bateram');
+						$paybras->log('Informações do pedido n�o bateram');
 					}
                 }
                 else {

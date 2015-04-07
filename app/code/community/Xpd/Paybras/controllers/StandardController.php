@@ -9,7 +9,7 @@
 class Xpd_Paybras_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sess�o Expirada
+     * Header de Sessão Expirada
      *
      */
     protected function _expireAjax() {
@@ -469,7 +469,7 @@ class Xpd_Paybras_StandardController extends Mage_Core_Controller_Front_Action {
     }
     
     /**
-     * Exibe tela de sucesso ap�s tentativa de repagamento
+     * Exibe tela de sucesso após tentativa de repagamento
      * 
      */
     public function successAction() {
@@ -495,7 +495,7 @@ class Xpd_Paybras_StandardController extends Mage_Core_Controller_Front_Action {
     }
     
     /**
-     * Exibe tela de falha ap�s tentativa de repagamento
+     * Exibe tela de falha após tentativa de repagamento
      * 
      */
     public function failureAction() {

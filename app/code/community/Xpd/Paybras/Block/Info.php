@@ -28,11 +28,6 @@ class Xpd_Paybras_Block_Info extends Mage_Payment_Block_Info_Ccsave
 				$order = $this->getInfo()->getOrder();
 			}
 		}
-        
-        /*if(!$order) {
-            $paybras = Mage::getSingleton('paybras/standard');
-            $order = $paybras->getOrder(); 
-        }*/
 
 		return $order;
     }
@@ -63,7 +58,6 @@ class Xpd_Paybras_Block_Info extends Mage_Payment_Block_Info_Ccsave
             return Mage::getSingleton('checkout/session')->getUrlRedirect();
         } elseif(isset($order)) {
             $payment = $order->getPayment();
-            //Mage::log('URL DO PAYMENT: ' . $payment->getPaybrasTransactionId());
             return $payment->getPaybrasOrderId();
         }
         else {
@@ -80,9 +74,6 @@ class Xpd_Paybras_Block_Info extends Mage_Payment_Block_Info_Ccsave
         if (!$order = $this->getInfo()->getOrder()) {
             $order = $this->getInfo()->getQuote();
         }
-//        if(!$order) {
-//            $order = $paybras->getOrder();
-//        }
         
         $transactionId = $this->getInfo()->getPaybrasTransactionId();
         $url_redirect = $this->getInfo()->getPaybrasOrderId();

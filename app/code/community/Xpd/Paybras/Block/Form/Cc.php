@@ -63,7 +63,7 @@ class Xpd_Paybras_Block_Form_Cc extends Mage_Payment_Block_Form_Cc {
     }
 
 	/**
-	 * Analisa o retorno do ajax de parcelamento (variavel de sessão) e retorna as parcelas
+	 * Analisa o retorno do ajax de parcelamento (variável de sessão) e retorna as parcelas
 	 * 
 	 */
     public function getParcelas() {

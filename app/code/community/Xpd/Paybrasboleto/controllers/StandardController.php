@@ -9,7 +9,7 @@
 class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sess�o Expirada
+     * Header de Sessão Expirada
      *
      */
     protected function _expireAjax() {
@@ -20,7 +20,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
     }
 
     /**
-     * Retorna singleton do Model do M�dulo.
+     * Retorna singleton do Model do Módulo.
      *
      * @return Xpd_Paybras_Model_Standard
      */
@@ -29,7 +29,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
     }
     
     /**
-     * Processa pagamento - cria transa��o via WebService 
+     * Processa pagamento - cria transação via WebService 
      * 
      */
     protected function redirectAction() {
@@ -135,7 +135,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
     }
     
     /**
-     * Captura Notifica��o do Pagamento
+     * Captura Notificação do Pagamento
      * 
      */
     public function capturaAction() {

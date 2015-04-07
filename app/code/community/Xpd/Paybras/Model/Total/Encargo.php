@@ -86,7 +86,6 @@ class Xpd_Paybras_Model_Total_Encargo extends Mage_Sales_Model_Quote_Address_Tot
      */
     public function fetch(Mage_Sales_Model_Quote_Address $address) {
         // Display total only if it is not zero
-//				echo var_dump($address->getEncargo());
         if ($address->getEncargo() > 0) {
 
 

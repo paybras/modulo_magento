@@ -128,9 +128,6 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         
         $this->formaPagamento = $data->getCheckFormapagamento();
         
-        //Mage::log($this->formaPagamento);
-        //Mage::getSingleton('core/session')->setFormaPagamento($data->getCheckFormapagamento);
-        //Mage::log(Mage::getSingleton('core/session')->getFormaPagamento());
         return $this;
     }
     
