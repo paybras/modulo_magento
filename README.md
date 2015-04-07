@@ -26,7 +26,7 @@ Configuração
 
 Na tela de configuração (SISTEMA -> CONFIGURAÇÃO) acessar a seção MÉTODOS DE PAGAMENTOS. Nessa seção existem todos as configurações do Paybras, como podemos ver a seguir.
 
-->![Aba de condigurações do Paybras](docs/group-fields-paybras.jpg)<-
+![Aba de condigurações do Paybras](docs/group-fields-paybras.jpg)
 
 Além dessas 4 abas, existe uma aba Paybras Mensagens, que será descrita com mais detalhes a seguir.
 
@@ -34,24 +34,24 @@ Cada forma de pagamento funciona como um módulo independente, dessa forma você
 
 Para cada forma de pagamento temos os campos obrigatórios para funcionamento: Habilitado (Sim/Não), Título da forma de pagamento (será exibido no checkout da loja para escolha do usuário), E-mail do Recebedor (e-mail da sua conta Paybras), Token de Integração (token gerado no seu painel Paybras), Ambiente (Produção ou Sandbox).
 
-->![Campos básicos de uma forma de pagamento Paybras](docs/campos-obrigatorios-formas-paybras.jpg)<-
+![Campos básicos de uma forma de pagamento Paybras](docs/campos-obrigatorios-formas-paybras.jpg)
 
 Além disso, todas as formas possuem a funcionalidade de limitar seu funcionamento por países em especifico, de acordo com outras funções nativas do Magento.
 
-->![Especificar países permitidos para cada forma de pagamento](docs/limit-paises-paybras.jpg)<-
+![Especificar países permitidos para cada forma de pagamento](docs/limit-paises-paybras.jpg)
 
 Para configurar corretamente a capturar automática das notificações de status, além de ativar o campo "Habilitar recebimento de Notificação", você deve utilizar a seguinte URL de Integração no seu painel Paybras: http://www.minhaloja.com.br/paybras/standard/captura
 
-->![Habilitar captura](docs/habilitar-captura.jpg)<-
-->![Configuração da URL de retorno no Paybras](docs/config-url-notification-paybras.jpg)<-
+![Habilitar captura](docs/habilitar-captura.jpg)
+![Configuração da URL de retorno no Paybras](docs/config-url-notification-paybras.jpg)
 
 Para garantir a integridade e padrão dos dados dos clientes e pedidos a serem enviados ao Paybras, o módulo possui opções de carregamento de template de formulários com campos padronizados, validações e máscaras para evitar formatos inválidos de telefones, datas de nascimento, CPF e campos de endereço. É necessário cuidado com essa opção pois ela pode alterar consideravelmente seu tema caso você possua formulários personalizados para tais fins.
 
-->![Habilitar captura](docs/custom-fields-paybras.jpg)<-
+![Habilitar captura](docs/custom-fields-paybras.jpg)
 
 A partir da versão 1.1.0 foi adicionado o campo de CPF persistente. Tal campo consiste em habilitar um input no formulário da forma de pagamento que irá ser enviado para o Paybras como o CPF do pagador do pedido. Mesmo que a loja já possua tal campo irá sobrescrever a informação de CPF no Paybras. Importante notar que esse campo não se aplica para cadastro na loja. Ele foi concebido para ser habilitado em casos em que a loja não tem as informações/formulários para capturar CPF do cliente de forma padronizada.
 
-->![Habilitar campo de CPF persistente](docs/habilitar-cpf-paybras.jpg)<-
+![Habilitar campo de CPF persistente](docs/habilitar-cpf-paybras.jpg)
 
 As formas Boleto, TEF e Web possibilitam adição de um texto personalizável ao formulário da forma de pagamento, nos campos "Textos para seção [...]".
 
