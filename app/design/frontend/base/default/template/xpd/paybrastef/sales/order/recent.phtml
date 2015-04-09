@@ -67,7 +67,6 @@
 						else {
 							$url_order = NULL;
 						}
-                        var_dump($_state);
 						?>
                         <a href="<?php echo $this->getViewUrl($_order) ?>"><?php echo $this->__('View Order') ?></a>
                         <?php if ($this->helper('sales/reorder')->canReorder($_order) || $url_order != NULL) : ?>
