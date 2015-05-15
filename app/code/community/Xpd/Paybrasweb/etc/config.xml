@@ -76,6 +76,7 @@
                 <environment>0</environment>
                 <allowspecific>0</allowspecific>
                 <notification>1</notification>
+                <textweb>Você será redirecionado para uma página onde poderá escolher a forma de pagamento desejada.</textweb>
             </paybrasweb>
         </payment>
     </default>

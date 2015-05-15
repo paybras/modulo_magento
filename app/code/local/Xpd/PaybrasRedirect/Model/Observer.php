@@ -85,7 +85,9 @@ class Xpd_PaybrasRedirect_Model_Observer
                     $dateTimestamp = Mage::getModel('core/date')->timestamp(strtotime($dob)) + 15000;
 					$data_nascimento = date('d-m-Y', $dateTimestamp);
 					$data_nascimento = explode("-",$data_nascimento);
-                    if( !((int)$data_nascimento[0] > 0 && (int)$data_nascimento[0] < 32) || !((int)$data_nascimento[1] > 0 && (int)$data_nascimento[1] < 13) || !((int)$data_nascimento[2] > 1935 && (int)$data_nascimento[2] < 2013) ) {
+					$menor_ano = ((int)date('Y')) - 90;
+					$maior_ano = (int)(date('Y'));
+                    if( !((int)$data_nascimento[0] > 0 && (int)$data_nascimento[0] < 32) || !((int)$data_nascimento[1] > 0 && (int)$data_nascimento[1] < 13) || !((int)$data_nascimento[2] > $menor_ano && (int)$data_nascimento[2] < $maior_ano) ) {
                     	$msg = Mage::getStoreConfig('payment/paybrasmsgs/dobinvalid');
 						Mage::getSingleton('customer/session')->addError($msg);
                         $edit_redirect = 1;
