@@ -234,7 +234,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
 						$paybras->log('{"retorno":"ok"}');
                     }
 					else {
-						$paybras->log('Informações do pedido n�o bateram');
+						$paybras->log('Informações do pedido não bateram');
 					}
                 }
                 else {
@@ -242,9 +242,9 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
                 }
             }
             else {
-                $paybras->log('Erro na Captura - Nao foi possivel pergar os dados');
+                $paybras->log('Erro na Captura - Não foi possível pergar os dados');
                 $paybras->log($json);
-                echo 'Erro na Captura - Nao foi possivel pergar os dados';
+                echo 'Erro na Captura - Não foi possível pergar os dados';
             }
 			
 			$paybras->log('Fim da Captura');

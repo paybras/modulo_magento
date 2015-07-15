@@ -236,7 +236,7 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                         //}
                     }
                     else {
-                        $paybras->log('Informa��es do pedido n�o bateram');
+                        $paybras->log('Informações do pedido não bateram');
                     }
                 }
                 else {
@@ -244,9 +244,9 @@ class Xpd_Paybrasboleto_StandardController extends Mage_Core_Controller_Front_Ac
                 }
             }
             else {
-                $paybras->log('Erro na Captura - Nao foi possivel pergar os dados');
+                $paybras->log('Erro na Captura - Não foi possivel pergar os dados');
                 $paybras->log($json);
-                echo 'Erro na Captura - Nao foi possivel pergar os dados';
+                echo 'Erro na Captura - Não foi possivel pergar os dados';
             }
             
             $paybras->log('Fim da Captura');
