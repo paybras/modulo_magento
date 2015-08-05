@@ -9,7 +9,7 @@
 class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sessão Expirada
+     * Header de SessÃ£o Expirada
      *
      */
     protected function _expireAjax() {
@@ -20,7 +20,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     }
 
     /**
-     * Retorna singleton do Model do Módulo.
+     * Retorna singleton do Model do MÃ³dulo.
      *
      * @return Xpd_Paybrastef_Model_Standard
      */
@@ -29,7 +29,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     }
     
     /**
-     * Processa pagamento - cria transação via WebService 
+     * Processa pagamento - cria transaÃ§Ã£o via WebService 
      * 
      */
     protected function redirectAction() {
@@ -135,7 +135,7 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
     
     
     /**
-     * Captura Notificação do Pagamento
+     * Captura NotificaÃ§Ã£o do Pagamento
      * 
      */
     public function capturaAction() {
@@ -146,17 +146,31 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
             
             if(!$json) {
                 $json = $_POST;
-                $transactionId = $json['transacao_id'];
-                $pedidoId = $json['pedido_id'];
-                $pedidoIdVerifica = $pedidoId;
-                $valor = $json['valor_original'];
-                $status_codigo = $json['status_codigo'];
-                $status_nome = $json['status_nome'];
-                $recebedor_api = $json['recebedor_api_token'];
+                if(is_array($json)) {
+                    if(isset($json['transacao_id']))
+                        $transactionId = $json['transacao_id'];
+                    if(isset($json['transacao_recuperada_id']))
+                        $transactionId = $json->{'transacao_recuperada_id'};
+                    if(isset($json['pedido_id']))
+                        $pedidoId = $json['pedido_id'];
+                    if(isset($pedidoId))
+                        $pedidoIdVerifica = $pedidoId;
+                    if(isset($json['valor_original']))
+                        $valor = $json['valor_original'];
+                    if(isset($json['status_codigo']))
+                        $status_codigo = $json['status_codigo'];
+                    if(isset($json['status_nome']))
+                        $status_nome = $json['status_nome'];
+                    if(isset($json['recebedor_api_token']))
+                        $recebedor_api = $json['recebedor_api_token'];
+                }
             }
             else {
-                $json = json_decode($json);
+                $json = json_decode(trim($json));
                 $transactionId = $json->{'transacao_id'};
+                if(isset($json->{'transacao_recuperada_id'})) {
+                    $transactionId = $json->{'transacao_recuperada_id'};
+                }
                 $pedidoId = $json->{'pedido_id'};
                 $pedidoIdVerifica = $pedidoId;
                 $valor = $json->{'valor_original'};
@@ -164,7 +178,6 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
                 $status_nome = $json->{'status_nome'};
                 $recebedor_api = $json->{'recebedor_api_token'};
             }
-            $paybras = $this->getStandard();
             
             $paybras->log('Pedido ID: '.$pedidoId);
             $paybras->log('Status: '.$status_codigo);
@@ -217,13 +230,11 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
                 if($json->{'sucesso'} == '1') {
                     if($json->{'pedido_id'} == $pedidoIdVerifica && $json->{'valor_original'} == $valor && $json->{'status_codigo'} == $status_codigo) {
                         $result = $paybras->processStatus($order,$status,$transactionId);
-                        //if($result >= 0) {
-                            echo '{"retorno":"ok"}';
-							$paybras->log('{"retorno":"ok"}');
-                        //}
+                        echo '{"retorno":"ok"}';
+						$paybras->log('{"retorno":"ok"}');
                     }
 					else {
-						$paybras->log('Informações do pedido não bateram');
+						$paybras->log('InformaÃ§Ãµes do pedido nÃ£o bateram');
 					}
                 }
                 else {
@@ -231,9 +242,9 @@ class Xpd_Paybrastef_StandardController extends Mage_Core_Controller_Front_Actio
                 }
             }
             else {
-                $paybras->log('Erro na Captura - Nao foi possivel pergar os dados');
+                $paybras->log('Erro na Captura - NÃ£o foi possÃ­vel pergar os dados');
                 $paybras->log($json);
-                echo 'Erro na Captura - Nao foi possivel pergar os dados';
+                echo 'Erro na Captura - NÃ£o foi possÃ­vel pergar os dados';
             }
 			
 			$paybras->log('Fim da Captura');

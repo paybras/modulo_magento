@@ -63,7 +63,6 @@ class Xpd_Paybrasboleto_Block_Info extends Mage_Payment_Block_Info
             return Mage::getSingleton('checkout/session')->getUrlRedirect();
         } elseif(isset($order)  && ($order->getState() != Mage_Sales_Model_Order::STATE_CANCELED && $order->getState() != Mage_Sales_Model_Order::STATE_PROCESSING && $order->getState() != Mage_Sales_Model_Order::STATE_COMPLETE)) {
             $payment = $order->getPayment();
-            //Mage::log('URL DO PAYMENT: ' . $payment->getPaybrasTransactionId());
             return $payment->getPaybrasOrderId();
         }
         else {

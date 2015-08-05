@@ -17,6 +17,8 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
     protected $_canUseInternal = false;
     protected $_canUseForMultishipping = false;
     protected $_canUseCheckout = true;
+    protected $_canRefund = true;
+    protected $_canRefundInvoicePartial = false;
     protected $_order;
     protected $_ambiente = 1;
     
@@ -126,9 +128,6 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         
         $this->formaPagamento = $data->getCheckFormapagamento();
         
-        //Mage::log($this->formaPagamento);
-        //Mage::getSingleton('core/session')->setFormaPagamento($data->getCheckFormapagamento);
-        //Mage::log(Mage::getSingleton('core/session')->getFormaPagamento());
         return $this;
     }
     
@@ -232,6 +231,9 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         $this->formaPagamento = $additionaldata['forma_pagamento'];
         
         /* Dados do Cartão */
+        if(isset($additionaldata['cpf_titular'])) {
+            $fields['pagador_cpf'] = $additionaldata['cpf_titular'];
+        }
         if($additionaldata['forma_pagamento'] == "cartao") {
             $fields['cartao_portador_nome'] = $payment->getCcOwner();
             $fields['cartao_numero'] = $payment->decrypt($payment->getCcNumberEnc());
@@ -241,6 +243,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
             $fields['cartao_parcelas'] = $additionaldata['cc_parcelas'];
             $fields['cartao_codigo_de_seguranca'] = $payment->decrypt($additionaldata['cc_cid_enc']);
             $fields['numberPayment'] = $additionaldata['cc_parcelas'];
+            $fields['cartao_portador_cpf'] = $fields['pagador_cpf'];
             
             $samePerson = $this->comparaNome($fields['cartao_portador_nome'],$fields['pagador_nome']);
             if(!$samePerson) {
@@ -448,29 +451,25 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
             if ($order->canUnhold()) {
 	           $order->unhold();
             }
-            if ($order->canCancel()) {
-				if($status == 5) {
-					$order_msg = "Pedido Cancelado. Transação: ". $transactionId;
-				}
-				if($status == 6) {
-					$order_msg = "Pedido Devolvido. Transação: ". $transactionId;
-				}
-                $order = $this->changeState($order,$status,NULL,$order_msg,1);
-				$order->cancel();
-				$order->save();
-                
-                if($status == 5) {
+            
+            if ($status == 5) {
+				$order_msg = "Pedido Cancelado. Transação: ". $transactionId;
+				if($order->canCancel()) {
+                    $order = $this->changeState($order,$status,NULL,$order_msg,1);
+                    $order->cancel();
+                    $order->save();
+                    
                     $this->log("Pedido Cancelado: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+                    return 0;
                 }
-                elseif($status == 6) {
-                    $this->log("Pedido Devolvido: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+                else {
+                    $this->log("Pedido não pode ser Cancelada.");
+                    return -1;
                 }
-                
-                return 0;
             }
-            else {
-                $this->log("Pedido não pode ser Cancelada.");
-                return -1;
+            elseif($status == 6) {
+                $order_msg = "Pedido Devolvido. Transação: ". $transactionId;
+                return $this->refundOrder($order,$order_msg);
             }
         }
         elseif($status == 2) {
@@ -490,6 +489,61 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         }
         
         return -1;
+    }
+    
+    /**
+     * Cria reembolso
+     * 
+     * @param Mage_Sales_Model_Order $order
+     * @param string $order_msg
+     * @return int
+     */
+    public function refundOrder($order, $order_msg) {
+        $service = Mage::getModel('sales/service_order', $order);
+        if (!$order->canCreditmemo() || $order->getTotalRefunded() >= $order->getBaseGrandTotal()) {
+            $this->log("Pedido não pode ser Estornado/Devolvido.");
+            return -1;
+        }
+        
+        $invoices = array();
+        foreach ($order->getInvoiceCollection() as $invoice) {
+            $invoices[] = $invoice;
+        }
+        
+        try {
+            foreach ($invoices as $invoice) {
+                $creditmemo = $service->prepareInvoiceCreditmemo($invoice);
+                $creditmemo->register();
+                $creditmemo->save();
+            }
+            
+            $order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
+            $order->setBaseShippingRefunded($order->getBaseShippingAmount());
+            $order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
+            $order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
+            $order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
+            $order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
+            $order->setDiscountRefunded($order->getDiscountInvoiced());
+            $order->setShippinRefunded($order->getShippingInvoiced());
+            $order->setShippinTaxRefunded($order->getShippingTaxAmount());
+            $order->setSubtotalRefunded($order->getSubtotalInvoiced());
+            $order->setTaxRefunded($order->getTaxInvoiced());
+            $order->setTotalOnlineRefunded($order->getBaseGrandTotal());
+            $order->setTotalRefunded($order->getBaseGrandTotal());
+            $order->save();
+            
+            $order = $this->changeState($order, $status, NULL, $order_msg);
+            
+            /*Mage::getModel('core/resource_transaction')
+            ->addObject($creditmemo)
+            ->addObject($order)
+            ->save();*/
+            $this->log("Pagamento Devolvido, pedido: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+            return 0;
+        } catch (Mage_Core_Exception $e) {
+            $this->log("Pedido não pode ser Estornado/Devolvido. Erro: " . $e->getMessage());
+            return -1;
+        }
     }
     
     /**
@@ -528,6 +582,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 				case 3: return Mage_Sales_Model_Order::STATE_CANCELED;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
 				case 5: return Mage_Sales_Model_Order::STATE_CANCELED;
+				case 6: return Mage_Sales_Model_Order::STATE_CLOSED;
 				default: return Mage_Sales_Model_Order::STATE_CANCELED;
 			}
 		}
@@ -538,6 +593,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 				case 3: return Mage::getStoreConfig('payment/paybras/repay') ? Mage_Sales_Model_Order::STATE_NEW : Mage_Sales_Model_Order::STATE_CANCELED;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
 				case 5: return Mage_Sales_Model_Order::STATE_NEW;//Mage_Sales_Model_Order::STATE_CANCELED;
+				case 6: return Mage_Sales_Model_Order::STATE_CLOSED;
 				default: return Mage_Sales_Model_Order::STATE_NEW;
 			}
 		}
@@ -558,6 +614,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 				case 3: return 'canceled';//'canceled';
 				case 4: return 'processing';
 				case 5: return 'canceled';//'canceled';
+				case 6: return 'closed';
 				default: return 'canceled';
 			}
 		}
@@ -568,6 +625,7 @@ class Xpd_Paybras_Model_Standard extends Mage_Payment_Model_Method_Abstract {
 				case 3: return Mage::getStoreConfig('payment/paybras/repay') ? 'pending' : 'canceled';
 				case 4: return 'processing';
 				case 5: return 'pending';
+				case 6: return 'closed';
 				default: return 'pending';
 			}
 		}

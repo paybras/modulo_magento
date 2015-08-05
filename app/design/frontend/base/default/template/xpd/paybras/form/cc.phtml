@@ -25,11 +25,14 @@
     <?php $billingaddress = $quote->getBillingAddress(); ?>
     <?php $customer = Mage::getSingleton('customer/session')->getCustomer(); ?>
     <?php $name = $billingaddress->getFirstname() . ' ' . $billingaddress->getLastname(); ?>
+    <?php $cpfForce = Mage::getStoreConfig('payment/paybras/forcecpf') == '' || Mage::getStoreConfig('payment/paybras/forcecpf') == 0 || Mage::getStoreConfig('payment/paybras/forcecpf') == '0' ? 0 : 1; ?>
     
     nomeComprador = '<?php echo $name; ?>';
     nomeTitular = '';
-    
-    new MaskedInput('input[name="payment[cc_cpftitular]"]', '999.999.999-99');
+
+    if(typeof mascaraCpf == 'undefined') {
+    	mascaraCpf = new MaskedInput('input[name="payment[cc_cpftitular]"]', '999.999.999-99');
+    }
     new MaskedInput('input[name="payment[cc_phone]"]', '(99)99999999?9');
     maskcid = new MaskedInput('input[name="payment[cc_cid]"]', '999');
         
@@ -139,7 +142,8 @@
 		<li style="margin-bottom: 20px;">
             <label for="<?php echo $_code ?>_parcelas"><?php echo $this->__('Parcelas') ?> </label><br />
             <div class="input-box">
-                <select id="<?php echo $_code ?>_cc_parcelas" name="payment[cc_parcelas]" class="required-entry">
+                <select id="<?php echo $_code ?>_cc_parcelas" name="payment[cc_parcelas]" class="validate-select">
+                    <option value="">Selecione</option>
     		<?php $j=1; foreach($this->getParcelas() as $parcela): ?>
                     <?php if($j == 1): ?>
                     <option value="<?php echo $j; ?>"><?php echo 'À vista - '.$this->helper('checkout')->formatPrice($parcela); ?></option>
@@ -155,13 +159,13 @@
         <li>
             <div class="input-box">
                 <label for="<?php echo $_code ?>_cc_owner" class="required"><em>*</em><?php echo $this->__('Name on Card') ?></label><br />
-                <input type="text" title="<?php echo $this->__('Name on Card') ?>" class="input-text required-entry" id="<?php echo $_code ?>_cc_owner" name="payment[cc_owner]" value="<?php echo $this->htmlEscape($this->getInfoData('cc_owner')) ?>" onblur="comparaNome(this.value,'<?php echo Mage::getBaseUrl(); ?>');"/>
+                <input type="text" title="<?php echo $this->__('Name on Card') ?>" class="input-text required-entry" id="<?php echo $_code ?>_cc_owner" name="payment[cc_owner]" value="<?php echo $this->htmlEscape($this->getInfoData('cc_owner')) ?>" onblur="comparaNome(this.value,'<?php echo Mage::getBaseUrl(); ?>',<?php echo $cpfForce; ?>);"/>
             </div>
         </li>
         <li>
             <label for="<?php echo $_code ?>_cc_number" class="required"><em>*</em><?php echo $this->__('Credit Card Number') ?></label><br />
             <div class="input-box">
-                <input type="text" id="<?php echo $_code ?>_cc_number" name="payment[cc_number]" title="<?php echo $this->__('Credit Card Number') ?>" onkeydown="mascara(this,numeros)" onfocus="mascara(this,numeros)" onblur="mascara(this,numeros);verifyType(this);" class="input-text required-entry cccard" value="" maxlength="16" />
+                <input type="text" id="<?php echo $_code ?>_cc_number" name="payment[cc_number]" title="<?php echo $this->__('Credit Card Number') ?>" onkeydown="mascara(this,numeros);" onfocus="mascara(this,numeros);$('paybras_cc_number').setAttribute('maxlength', 19);" onblur="mascara(this,numeros);verifyType(this);" class="input-text required-entry cccard" value="" maxlength="19" />
             </div>
         </li>
         <li id="<?php echo $_code ?>_cc_type_exp_div">
@@ -198,7 +202,7 @@
         </li>
         <?php endif; ?>
                 
-        <li id="<?php echo $_code ?>_cc_cpftitular_div" style="display: none;">
+        <li id="<?php echo $_code ?>_cc_cpftitular_div" <?php if(!$cpfForce): ?>style="display: none;"<?php endif; ?>>
             <label for="<?php echo $_code ?>_cc_cpftitular" class="required"><em>*</em><?php echo $this->__("TAX/VAT of Card's Owner") ?></label><br />
             <div class="input-box">
                 <div class="v-fix">

@@ -117,7 +117,15 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
         }
         
         $info = $this->getInfoInstance();
-        $additionaldata = array('forma_pagamento' => 'boleto');
+        
+        $cpfForce = Mage::getStoreConfig('payment/paybras/forcecpf') == '' || Mage::getStoreConfig('payment/paybras/forcecpf') == 0 || Mage::getStoreConfig('payment/paybras/forcecpf') == '0' ? 0 : 1;
+        if($cpfForce) {
+            $additionaldata = array('forma_pagamento' => 'boleto', 'cpf_titular' => $data->getCcCpftitular());
+        }
+        else {
+            $additionaldata = array('forma_pagamento' => 'boleto');
+        }
+        
         $info->setAdditionalData(serialize($additionaldata));
         return $this;
     }
@@ -323,6 +331,10 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
         $additionaldata = unserialize($payment->getData('additional_data'));
         $this->formaPagamento = $additionaldata['forma_pagamento'];
         
+        if(!$fields['pagador_cpf'] && isset($additionaldata['cpf_titular'])) {
+            $fields['pagador_cpf'] = $additionaldata['cpf_titular'];
+        }
+        
         $fields['pedido_meio_pagamento'] = 'boleto';
         $fields['pedido_id'] = $order->getIncrementId();
         $fields['pedido_valor_total_original'] = number_format($order->getGrandTotal(), 2, '.', '');
@@ -464,6 +476,14 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
                 return -1;
             }
         }
+        elseif ($status == 6) {
+            if ($order->canUnhold()) {
+                $order->unhold();
+            }
+            
+            $order_msg = "Pedido Devolvido. Transação: ". $transactionId;
+            return $this->refundOrder($order,$order_msg);
+        }
         elseif($status == 2) {
             $order_msg = "Pedido em análise. Transação: ". $transactionId;
     		$order = $this->changeState($order,$status,NULL,$order_msg,$repay);
@@ -481,6 +501,61 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
         }
         
         return -1;
+    }
+    
+    /**
+     * Cria reembolso
+     *
+     * @param Mage_Sales_Model_Order $order
+     * @param string $order_msg
+     * @return int
+     */
+    public function refundOrder($order, $order_msg) {
+        $service = Mage::getModel('sales/service_order', $order);
+        if (!$order->canCreditmemo() || $order->getTotalRefunded() >= $order->getBaseGrandTotal()) {
+            $this->log("Pedido não pode ser Estornado/Devolvido.");
+            return -1;
+        }
+    
+        $invoices = array();
+        foreach ($order->getInvoiceCollection() as $invoice) {
+            $invoices[] = $invoice;
+        }
+    
+        try {
+            foreach ($invoices as $invoice) {
+                $creditmemo = $service->prepareInvoiceCreditmemo($invoice);
+                $creditmemo->register();
+                $creditmemo->save();
+            }
+    
+            $order->setBaseDiscountRefunded($order->getBaseDiscountInvoiced());
+            $order->setBaseShippingRefunded($order->getBaseShippingAmount());
+            $order->setBaseShippingTaxRefunded($order->getBaseShippingTaxInvoiced());
+            $order->setBaseSubtotalRefunded($order->getBaseSubtotalInvoiced());
+            $order->setBaseTaxRefunded($order->getBaseTaxInvoiced());
+            $order->setBaseTotalOnlineRefunded($order->getBaseGrandTotal());
+            $order->setDiscountRefunded($order->getDiscountInvoiced());
+            $order->setShippinRefunded($order->getShippingInvoiced());
+            $order->setShippinTaxRefunded($order->getShippingTaxAmount());
+            $order->setSubtotalRefunded($order->getSubtotalInvoiced());
+            $order->setTaxRefunded($order->getTaxInvoiced());
+            $order->setTotalOnlineRefunded($order->getBaseGrandTotal());
+            $order->setTotalRefunded($order->getBaseGrandTotal());
+            $order->save();
+    
+            $order = $this->changeState($order, $status, NULL, $order_msg);
+    
+            /*Mage::getModel('core/resource_transaction')
+             ->addObject($creditmemo)
+            ->addObject($order)
+            ->save();*/
+            $this->log("Pagamento Devolvido, pedido: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+            return 0;
+        } catch (Mage_Core_Exception $e) {
+            $this->log("Pedido não pode ser Estornado/Devolvido. Erro: " . $e->getMessage());
+            return -1;
+        }
     }
     
     /**
@@ -519,6 +594,7 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
 				case 3: return Mage_Sales_Model_Order::STATE_CANCELED;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
 				case 5: return Mage_Sales_Model_Order::STATE_CANCELED;
+				case 6: return Mage_Sales_Model_Order::STATE_CLOSED;
 				default: return Mage_Sales_Model_Order::STATE_CANCELED;
 			}
 		}
@@ -529,6 +605,7 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
 				case 3: return Mage_Sales_Model_Order::STATE_NEW;
 				case 4: return Mage_Sales_Model_Order::STATE_PROCESSING;
 				case 5: return Mage_Sales_Model_Order::STATE_NEW;//Mage_Sales_Model_Order::STATE_CANCELED;
+				case 6: return Mage_Sales_Model_Order::STATE_CLOSED;
 				default: return Mage_Sales_Model_Order::STATE_NEW;
 			}
 		}
@@ -549,6 +626,7 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
 				case 3: return 'canceled';//'canceled';
 				case 4: return 'processing';
 				case 5: return 'canceled';//'canceled';
+				case 6: return 'closed';
 				default: return 'canceled';
 			}
 		}
@@ -559,6 +637,7 @@ class Xpd_Paybrasboleto_Model_Standard extends Mage_Payment_Model_Method_Abstrac
 				case 3: return 'pending';
 				case 4: return 'processing';
 				case 5: return 'pending';
+				case 6: return 'closed';
 				default: return 'pending';
 			}
 		}

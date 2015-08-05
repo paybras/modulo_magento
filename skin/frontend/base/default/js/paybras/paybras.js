@@ -1,41 +1,41 @@
 function buscarEndereco(host,quale) {
 
-	new Ajax.Request(host + 'paybras_cep.php?cep=' + document.getElementById(quale+':postcode').value.replace(/\+/g, ''), {
+    new Ajax.Request(host + 'paybras_cep.php?cep=' + document.getElementById(quale+':postcode').value.replace(/\+/g, ''), {
         method:'get',
         onSuccess: function(respostaCEP) {
-			r = respostaCEP.responseText;
-			
-			street_1 = r.substring(0, (i = r.indexOf(':')));
-			document.getElementById(quale+':street1').value = unescape(street_1.replace(/\+/g," "));
+            r = respostaCEP.responseText;
+            
+            street_1 = r.substring(0, (i = r.indexOf(':')));
+            document.getElementById(quale+':street1').value = unescape(street_1.replace(/\+/g," "));
 
-			r = r.substring(++i);
-			street_4 = r.substring(0, (i = r.indexOf(':')));
-			document.getElementById(quale+':street4').value = unescape(street_4.replace(/\+/g," "));
+            r = r.substring(++i);
+            street_4 = r.substring(0, (i = r.indexOf(':')));
+            document.getElementById(quale+':street4').value = unescape(street_4.replace(/\+/g," "));
 
-			r = r.substring(++i);
-			city = r.substring(0, (i = r.indexOf(':')));
-			document.getElementById(quale+':city').value = unescape(city.replace(/\+/g," "));
+            r = r.substring(++i);
+            city = r.substring(0, (i = r.indexOf(':')));
+            document.getElementById(quale+':city').value = unescape(city.replace(/\+/g," "));
 
-			r = r.substring(++i);
-			region = r.substring(0, (i = r.indexOf(':')));
+            r = r.substring(++i);
+            region = r.substring(0, (i = r.indexOf(':')));
 
-			r = r.substring(++i);
-			
-			regionID = r.substring(0, 3);
-			
-			regionSelect = region;
-			region = region.replace(/\+/g," ");
-			
-			$$('select[name="'+quale+'[region_id]"] option').each(function(element) {
-				if(element.value == regionID){
-					element.selected = true;
-				}
-			});
-			
-			setTimeout(function() { document.getElementById(quale+':street2').focus(); }, 1);
-		}
-	});
-	
+            r = r.substring(++i);
+            
+            regionID = r.substring(0, 3);
+            
+            regionSelect = region;
+            region = region.replace(/\+/g," ");
+            
+            $$('select[name="'+quale+'[region_id]"] option').each(function(element) {
+                if(element.value == regionID){
+                    element.selected = true;
+                }
+            });
+            
+            setTimeout(function() { document.getElementById(quale+':street2').focus(); }, 1);
+        }
+    });
+    
 };
 
 function attrName(element) {
@@ -90,7 +90,7 @@ function attrName(element) {
         document.getElementById("boleto").style.display="none";
     }
 
-    function comparaNome(nomeTitular,host) {
+    function comparaNome(nomeTitular,host,cpfforce) {
         if(document.getElementById("billing:firstname") && document.getElementById("billing:lastname")) {
             nomeComprador = document.getElementById("billing:firstname").value + ' ' + document.getElementById("billing:lastname").value;
         }
@@ -101,12 +101,16 @@ function attrName(element) {
                 var response = transport.responseText || -1;
                 
                 if(response == 1) {
-                    document.getElementById("paybras_cc_cpftitular_div").style.display="none";
+                	if(cpfforce != 1) {
+                		document.getElementById("paybras_cc_cpftitular_div").style.display="none";
+                	}
                     document.getElementById("paybras_cc_phone_div").style.display="none";
                     document.getElementById("paybras_cc_type_dob_div").style.display="none";
                 }
                 else {
-                    document.getElementById("paybras_cc_cpftitular_div").style.display="block";
+                	if(cpfforce != 1) {
+                		document.getElementById("paybras_cc_cpftitular_div").style.display="block";
+                	}
                     document.getElementById("paybras_cc_phone_div").style.display="block";
                     document.getElementById("paybras_cc_type_dob_div").style.display="block";
                 }
@@ -141,18 +145,29 @@ function onCardChange(optElement) {
             $(optElement).previous(0).addClassName('selecionada');
         }
         else {
-            $('paybras_cc_number').setAttribute('maxlength', 16);
-            $('paybras_cc_cid').setAttribute('maxlength', 3);
-            maskcid.unmask().mask('999');
-            
-            if(selCard == 'visa') {
+            if(selCard == 'hipercard') {
+            	$('paybras_cc_number').setAttribute('maxlength', 19);
+                $('paybras_cc_cid').setAttribute('maxlength', 4);
+                maskcid.unmask().mask('999');
                 $(optElement).previous(0).addClassName('selecionada');
             }
-            if(selCard == 'mastercard') {
-                $(optElement).previous(0).addClassName('selecionada');
-            }
-            if(selCard == 'elo') {
-                $(optElement).previous(0).addClassName('selecionada');
+            else {
+                $('paybras_cc_number').setAttribute('maxlength', 16);
+                $('paybras_cc_cid').setAttribute('maxlength', 3);
+                maskcid.unmask().mask('999');
+                
+                if(selCard == 'visa') {
+                    $(optElement).previous(0).addClassName('selecionada');
+                }
+                if(selCard == 'mastercard') {
+                    $(optElement).previous(0).addClassName('selecionada');
+                }
+                if(selCard == 'elo') {
+                    $(optElement).previous(0).addClassName('selecionada');
+                }
+                if(selCard == 'jcb') {
+                    $(optElement).previous(0).addClassName('selecionada');
+                }
             }
         }
     }
@@ -185,15 +200,27 @@ function verifyType(element) {
     var discoverReg = /^6011-?\d{4}-?\d{4}-?\d{4}$/;
     var amexReg = /^3[47]\d{13}$/;
     var dinersReg = /^3[068]\d{12}$/;
+    var jcb = /^(?:2131|1800|35\d{3})\d{11}$/;
+    var hipercard = /^(606282\d{10}(\d{3})?)|(3841\d{15})$/;
     
     $$('.seleciona-bandeiras-cards label').each(function(e,i){
         $(e).removeClassName('selecionada');
     });
-    $('opt-visa').checked = false;
-    $('opt-mastercard').checked = false;
-    $('opt-amex').checked = false;
-    $('opt-diners').checked = false;
-    $('opt-elo').checked = false;
+    if($('opt-visa') != null)
+    	$('opt-visa').checked = false;
+    if($('opt-mastercard') != null)
+    	$('opt-mastercard').checked = false;
+    if($('opt-amex') != null)
+    	$('opt-amex').checked = false;
+    if($('opt-diners') != null)
+    	$('opt-diners').checked = false;
+    if($('opt-elo') != null)
+    	$('opt-elo').checked = false;
+    if($('opt-jcb') != null)
+    	$('opt-jcb').checked = false;
+    if($('opt-hipercard') != null)
+    	$('opt-hipercard').checked = false;
+    //$('opt-aura').checked = false;
     
     if(visaReg.test(ccnum) && ccnum.length == 16) {
         $('opt-visa').checked = true;
@@ -215,6 +242,16 @@ function verifyType(element) {
         $('paybras_cc_cid').setAttribute('maxlength', 3);
         maskcid.unmask().mask('999');
         $('opt-diners').previous(0).addClassName('selecionada');
+    } else if(hipercard.test(ccnum)) {
+        $('opt-hipercard').checked = true;
+        $('paybras_cc_cid').setAttribute('maxlength', 3);
+        maskcid.unmask().mask('999');
+        $('opt-hipercard').previous(0).addClassName('selecionada');
+    } else if(jcb.test(ccnum) && ccnum.length == 16) {
+        $('opt-jcb').checked = true;
+        $('paybras_cc_cid').setAttribute('maxlength', 3);
+        maskcid.unmask().mask('999');
+        $('opt-jcb').previous(0).addClassName('selecionada');
     } else {
         $('paybras_cc_cid').setAttribute('maxlength', 3);
         maskcid.unmask().mask('999');

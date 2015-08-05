@@ -9,7 +9,7 @@
 class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Action {
 
     /**
-     * Header de Sessão Expirada
+     * Header de SessÃ£o Expirada
      *
      */
     protected function _expireAjax() {
@@ -20,7 +20,7 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
     }
 
     /**
-     * Retorna singleton do Model do Módulo.
+     * Retorna singleton do Model do MÃ³dulo.
      *
      * @return Xpd_Paybras_Model_Standard
      */
@@ -29,13 +29,14 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
     }
     
     /**
-     * Processa pagamento - cria transação via WebService 
+     * Processa pagamento - cria transaÃ§Ã£o via WebService 
      * 
      */
     protected function redirectAction() {
         $paybras = $this->getStandard();
+        
         $session = Mage::getSingleton('checkout/session');
-        $order = $paybras->getOrder();        
+        $order = $paybras->getOrder();
         $session->unsUrlRedirect();
         
         if($paybras->getEnvironment() == '1') {
@@ -95,6 +96,7 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
      */
     public function pagamentoAction() {
 		Mage::getSingleton('customer/session')->setBeforeAuthUrl(Mage::getUrl('*/*/*'));
+		
         $paybras = Mage::getSingleton('paybrasweb/standard');
 		$session = Mage::getSingleton('checkout/session');
         
@@ -169,7 +171,7 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
     }
     
     /**
-     * Captura Notificação do Pagamento
+     * Captura NotificaÃ§Ã£o do Pagamento
      * 
      */
     public function capturaAction() {
@@ -257,7 +259,7 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
                         //}
                     }
 					else {
-						$paybras->log('Informações do pedido não bateram');
+						$paybras->log('InformaÃ§Ãµes do pedido nÃ£o bateram');
 					}
                 }
                 else {
@@ -265,9 +267,9 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
                 }
             }
             else {
-                $paybras->log('Erro na Captura - Nao foi possivel pergar os dados');
+                $paybras->log('Erro na Captura - NÃ£o foi possivel pergar os dados');
                 $paybras->log($json);
-                echo 'Erro na Captura - Nao foi possivel pergar os dados';
+                echo 'Erro na Captura - NÃ£o foi possivel pergar os dados';
             }
 			
 			$paybras->log('Fim da Captura');
@@ -275,7 +277,7 @@ class Xpd_Paybrasweb_StandardController extends Mage_Core_Controller_Front_Actio
     }
 	
 	/**
-     * Exibe tela de sucesso após tentativa de repagamento
+     * Exibe tela de sucesso apÃ³s tentativa de repagamento
      * 
      */
     public function retornoAction() {

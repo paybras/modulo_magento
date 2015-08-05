@@ -117,34 +117,31 @@ class Xpd_Paybrasweb_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         }
         return $ip;
     }
-        
+    
     /**
      * Sobrecarga da função assignData, acrecentado dados adicionais.
-     * 
-	 * @param $data - Informação adiquirida do método de pagamento.
-     * @return Mage_Payment_Model_Method_Cc
+     *
+     * @param $data - Informação adiquirida do método de pagamento.
+     * @return Mage_Payment_Model_Method_Abstract
      */
-    /*public function assignData($data) {
-        $details = array();
-        if (!($data instanceof Varien_Object)) {
-            $data = new Varien_Object($data);
+    public function assignData($data) {
+        $cpfForce = Mage::getStoreConfig('payment/paybrasweb/forcecpf') == '' || Mage::getStoreConfig('payment/paybrasweb/forcecpf') == 0 || Mage::getStoreConfig('payment/paybrasweb/forcecpf') == '0' ? 0 : 1;
+        if($cpfForce) {
+            $details = array();
+            if (!($data instanceof Varien_Object)) {
+                $data = new Varien_Object($data);
+            }
+            
+            $info = $this->getInfoInstance();
+            $additionaldata = array('cpf_titular' => $data->getCcCpftitular());
+            $info->setAdditionalData(serialize($additionaldata));
+            
+            return $this;
         }
-        $info = $this->getInfoInstance();
-        //$additionaldata = array('cc_parcelas' => $data->getCcParcelas(), 'cc_cid_enc' => $info->encrypt($data->getCcCid()), 'cpf_titular' => $data->getCcCpftitular(), 'day_titular' => $data->getCcDobDay(), 'month_titular' => $data->getCcDobMonth(), 'year_titular' => $data->getCcDobYear(), 'tel_titular' => $data->getPhone(), 'forma_pagamento' => $data->getCheckFormapagamento(), 'tef_banco' => $data->getTefBanco());
-        //$info->setAdditionalData(serialize($additionaldata));
-        //$info->setCcType($data->getCcType());
-        //$info->setCcOwner($data->getCcOwner());
-        //$info->setCcExpMonth($data->getCcExpMonth());
-        /*$info->setCcExpYear($data->getCcExpYear());
-        $info->setCcNumberEnc($info->encrypt($data->getCcNumber()));
-        $info->setCcCidEnc($info->encrypt($data->getCcCid()));
-        $info->setCcLast4(substr($data->getCcNumber(), -4));*/
-        
-        //Mage::log($this->formaPagamento);
-        //Mage::getSingleton('core/session')->setFormaPagamento($data->getCheckFormapagamento);
-        //Mage::log(Mage::getSingleton('core/session')->getFormaPagamento());
-        /*return $this;
-    }*/
+        else {
+            return parent::assingData($data);
+        }
+    }
     
     /**
      * Recupera os dados necessários para a criacão de uma transação
@@ -238,6 +235,14 @@ class Xpd_Paybrasweb_Model_Standard extends Mage_Payment_Model_Method_Abstract {
             case 1: $fields['pagador_sexo'] = 'M'; break;
             case 2: $fields['pagador_sexo'] = 'F'; break;
             default: $fields['pagador_sexo'] = ''; break;
+        }
+        
+        if($payment->getData('additional_data')) {
+            $additionaldata = unserialize($payment->getData('additional_data'));
+            
+            if(isset($additionaldata['cpf_titular'])) {
+                $fields['pagador_cpf'] = $additionaldata['cpf_titular'];
+            }
         }
         
         $meiosPag = Mage::getStoreConfig('payment/paybrasweb/emailstore');
@@ -410,6 +415,48 @@ class Xpd_Paybrasweb_Model_Standard extends Mage_Payment_Model_Method_Abstract {
         }
         
         return -1;
+    }
+    
+    /**
+     * Cria reembolso
+     */
+    public function refundOrder($order, $order_msg) {
+        $service = Mage::getModel('sales/service_order', $order);
+        if (!$order->canCreditmemo()) {
+            $this->log("Pedido não pode ser Estornado/Devolvido.");
+            return -1;
+        }
+    
+        if ($refundToStoreCreditAmount) {
+            $refundToStoreCreditAmount = max(0, min($creditmemo->getBaseCustomerBalanceReturnMax(), $refundToStoreCreditAmount));
+            if ($refundToStoreCreditAmount) {
+                $refundToStoreCreditAmount = $creditmemo->getStore()->roundPrice($refundToStoreCreditAmount);
+                $creditmemo->setBaseCustomerBalanceTotalRefunded($refundToStoreCreditAmount);
+                $refundToStoreCreditAmount = $creditmemo->getStore()->roundPrice(
+                        $refundToStoreCreditAmount * $order->getStoreToOrderRate()
+                );
+    
+                $creditmemo->setBsCustomerBalTotalRefunded($refundToStoreCreditAmount);
+                $creditmemo->setCustomerBalanceRefundFlag(true);
+            }
+        }
+    
+        $creditmemo->setPaymentRefundDisallowed(true)->register();
+        if (!empty($order_msg)) {
+            $creditmemo->addComment($order_msg, $notifyCustomer);
+        }
+    
+        try {
+            Mage::getModel('core/resource_transaction')
+            ->addObject($creditmemo)
+            ->addObject($order)
+            ->save();
+            $this->log("Pagamento Devolvido, pedido: ".$order->getRealOrderId() . ". Transação: ". $transactionId);
+            return 0;
+        } catch (Mage_Core_Exception $e) {
+            $this->log("Pedido não pode ser Estornado/Devolvido. Erro: " . $e->getMessage());
+            return -1;
+        }
     }
     
     /**

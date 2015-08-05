@@ -81,13 +81,14 @@
                             <show_in_store>1</show_in_store>
                         </enablevalidate-->
                         <unico>
-                            <label>Esse método de pagamento é o único método da empresa Paybras e não possui OneStepCheckout?</label>
+                            <label>Carregar formulários e validações de campo da Paybras (utilizar apenas se não habilitou em Cartão de Crédito)</label>
                             <frontend_type>select</frontend_type>
                             <source_model>adminhtml/system_config_source_yesno</source_model>
                             <sort_order>120</sort_order>
 							<show_in_default>1</show_in_default>
                             <show_in_website>1</show_in_website>
                             <show_in_store>1</show_in_store>
+                            <comment>Importante: Utilizar se esse método de pagamento é o único método da empresa Paybras ativo e não possui OneStepCheckout ou formulários de endereços personalizados.</comment>
                         </unico>
 						<texttef translate="label">
                             <label>Texto para seção do TEF</label>
@@ -97,6 +98,16 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </texttef>
+                        <forcecpf>
+                            <label>Habilitar campo CPF persistente</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>125</sort_order>
+                            <comment>Torna persistente o campo CPF do formulário de dados de pagamento a fim de garantir que o CPF seja sempre capturado (evita possíveis cancelamentos por análise de risco).</comment>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </forcecpf>
                         <allowspecific translate="label">
                             <label>Pagamento Aplicável para os Seguintes Países</label>
                             <frontend_type>allowspecific</frontend_type>
